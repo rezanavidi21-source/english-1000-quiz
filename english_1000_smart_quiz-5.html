@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>English 1000 — Smart Vocabulary Quiz</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Tahoma,"Vazirmatn","Noto Sans Arabic",Arial,sans-serif;background:#f4f7fb;color:#172033;min-height:100vh}
+.app{width:min(760px,94vw);margin:22px auto;background:#fff;border-radius:24px;box-shadow:0 12px 40px #0001;padding:20px}
+header{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}
+.badge{background:#eef2ff;color:#3730a3;padding:7px 11px;border-radius:999px;font-size:13px;font-weight:700}
+.stats{display:flex;gap:8px;flex-wrap:wrap}
+.stat{font-size:13px;color:#667085;background:#f8fafc;padding:7px 10px;border-radius:10px}
+.progress{height:9px;background:#e9edf3;border-radius:99px;margin:15px 0 25px;overflow:hidden}.bar{height:100%;width:0;background:#2563eb;transition:.25s}
+.wordrow{display:flex;align-items:center;justify-content:center;gap:12px;direction:ltr}
+.word{font-size:48px;font-weight:800;text-align:center;margin:8px 0 7px;letter-spacing:.5px}
+.speak{border:0;border-radius:50%;width:44px;height:44px;background:#eef2ff;cursor:pointer;font-size:21px}
+.meta{text-align:center;color:#98a2b3;font-size:13px;margin-bottom:25px}
+.options{display:grid;gap:11px}
+.opt{width:100%;border:2px solid #e4e7ec;background:#fff;border-radius:14px;padding:14px 15px;font-size:17px;cursor:pointer;text-align:right;transition:.15s}
+.opt:hover:not(:disabled){border-color:#9aa7bd;background:#f8fafc}
+.opt.correct{background:#dcfce7;border-color:#22c55e;color:#166534}
+.opt.wrong{background:#fee2e2;border-color:#ef4444;color:#991b1b}
+.opt:disabled{cursor:default}
+.status{text-align:center;font-weight:700;min-height:27px;margin-top:14px}
+.example{display:none;background:#f8fafc;border-right:4px solid #2563eb;border-radius:12px;padding:13px 14px;margin-top:12px;line-height:1.8;direction:ltr;text-align:left}
+.example small{display:block;direction:rtl;text-align:right;color:#667085;margin-top:4px}
+.nav{display:flex;justify-content:space-between;gap:10px;margin-top:20px}
+button.navbtn,.action{border:0;border-radius:12px;padding:12px 17px;font-size:15px;cursor:pointer;background:#172033;color:white}
+button.navbtn:disabled{opacity:.35;cursor:not-allowed}
+.tools{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:14px}
+.tool{border:1px solid #d0d5dd;background:#fff;border-radius:10px;padding:9px 12px;cursor:pointer}
+.tool.active{background:#fff7d6;border-color:#f2c94c}
+.finish{text-align:center;padding:15px 5px}.finish h2{font-size:28px}
+.bigscore{font-size:25px;font-weight:800;margin:16px}.reviewlist{text-align:right;max-height:300px;overflow:auto;background:#f8fafc;padding:10px;border-radius:12px}
+.reviewitem{padding:9px;border-bottom:1px solid #e5e7eb}.reviewitem:last-child{border:0}
+.hidden{display:none!important}
+.loading{text-align:center;padding:40px 10px;color:#667085}
+.note{font-size:12px;color:#98a2b3;text-align:center;margin-top:13px;line-height:1.7}
+@media(max-width:520px){.app{padding:16px}.word{font-size:39px}.opt{font-size:16px}}
+</style>
+</head>
+<body>
+<main class="app">
+  <header>
+    <span class="badge">English 1000 🧠</span>
+    <div class="stats">
+      <span class="stat" id="counter">در حال آماده‌سازی…</span>
+      <span class="stat" id="score">درست: 0</span>
+      <span class="stat" id="streak">پشت‌سرهم: 0</span>
+    </div>
+  </header>
+  <div class="progress"><div class="bar" id="bar"></div></div>
+
+  <section id="loading" class="loading">
+    <div style="font-size:32px">⏳</div>
+    <div>دارم ۱۰۰۰ کلمهٔ متداول و کاربردی را آماده می‌کنم…</div>
+    <div class="note">این نسخه برای استفاده از بانک واژگان به اینترنت نیاز دارد. بعد از بارگذاری، اطلاعات آزمون در گوشی ذخیره می‌شود.</div>
+  </section>
+
+  <section id="quiz" hidden>
+    <div class="wordrow">
+      <button class="speak" id="speak" title="تلفظ">🔊</button>
+      <div class="word" id="word"></div>
+    </div>
+    <div class="meta" id="meta"></div>
+    <div class="options" id="options"></div>
+    <div class="status" id="status"></div>
+    <div class="example" id="example"></div>
+
+    <div class="tools">
+      <button class="tool" id="star">☆ ستاره‌دار کردن</button>
+      <button class="tool" id="reviewWrong">🔁 مرور غلط‌ها</button>
+    </div>
+
+    <div class="nav">
+      <button class="navbtn" id="prev">قبلی</button>
+      <button class="navbtn" id="next" disabled>بعدی</button>
+    </div>
+    <div class="note">تایمر عمداً حذف شده؛ هدف یادگیری است، نه سرعت. گزینه‌ها هر بار تصادفی می‌شوند.</div>
+  </section>
+
+  <section id="finish" class="finish" hidden>
+    <h2>دور تمام شد! 🎉</h2>
+    <div class="bigscore" id="finalScore"></div>
+    <div id="finalExtra"></div>
+    <div class="reviewlist" id="wrongList"></div>
+    <div class="tools">
+      <button class="action" id="restart">شروع دوباره</button>
+      <button class="tool" id="restartWrong">فقط غلط‌ها</button>
+      <button class="tool" id="starredOnly">فقط ستاره‌دارها</button>
+    </div>
+  </section>
+</main>
+
+<script>
+const API = "https://openjam.amirj4m.com/v1/words?level=B2&lang=fa&limit=1000";
+let words=[], deck=[], idx=0, score=0, streak=0, answers={}, stars=new Set(), wrongSet=new Set();
+
+const $=id=>document.getElementById(id);
+function shuffle(a){return [...a].sort(()=>Math.random()-.5)}
+function cleanFa(s){return String(s||"").replace(/\\s+/g," ").trim()}
+function getTranslations(x){
+  let t=x.translations||x.translation||x.persian||x.meanings||[];
+  if(typeof t==="string") t=[t];
+  if(!Array.isArray(t)) t=[];
+  return [...new Set(t.map(cleanFa).filter(Boolean))];
+}
+function getExample(x){
+  if(Array.isArray(x.examples) && x.examples.length) return x.examples[0];
+  return x.example||"";
+}
+function normalize(raw){
+  const arr=Array.isArray(raw)?raw:(raw.words||raw.data||[]);
+  return arr.map((x,i)=>{
+    const word=x.word||x.english||x.lemma;
+    const tr=getTranslations(x);
+    if(!word||!tr.length) return null;
+    return {id:word.toLowerCase(),word,meaning:tr[0],all:tr,example:getExample(x),rank:x.frequency_rank||x.rank||i+1,level:x.cefr_level||x.level||""};
+  }).filter(Boolean);
+}
+function save(){
+  localStorage.setItem("eng1000_state",JSON.stringify({answers,stars:[...stars],wrong:[...wrongSet],score,streak,idx}));
+}
+function load(){
+  try{
+    const s=JSON.parse(localStorage.getItem("eng1000_state")||"{}");
+    answers=s.answers||{};stars=new Set(s.stars||[]);wrongSet=new Set(s.wrong||[]);score=s.score||0;streak=s.streak||0;
+  }catch(e){}
+}
+function makeOptions(w){
+  const pool=words.filter(x=>x.id!==w.id).flatMap(x=>x.all.length?x.all:[x.meaning]);
+  const unique=[...new Set(pool)].filter(x=>x!==w.meaning);
+  return shuffle([w.meaning,...shuffle(unique).slice(0,4)]);
+}
+function render(){
+  if(idx<0)idx=0;
+  if(idx>=deck.length){finish();return}
+  const w=deck[idx], ans=answers[w.id];
+  $("counter").textContent=`${idx+1} / ${deck.length}`;
+  $("score").textContent=`درست: ${score}`;
+  $("streak").textContent=`پشت‌سرهم: ${streak}`;
+  $("bar").style.width=((idx)/Math.max(1,deck.length-1)*100)+"%";
+  $("word").textContent=w.word;
+  $("meta").textContent=`کلمهٔ ${words.indexOf(w)+1} از ۱۰۰۰${w.level?" • "+w.level:""}`;
+  $("status").textContent=ans? (ans.correct?"درست بود! ✅":"اشتباه بود ❌"):"";
+  $("status").style.color=ans?(ans.correct?"#15803d":"#b91c1c"):"";
+  $("example").style.display=ans?"block":"none";
+  if(ans){
+    $("example").innerHTML=`<strong>${w.example||"Example not available."}</strong><small>${w.meaning}</small>`;
+  }
+  $("star").textContent=stars.has(w.id)?"★ حذف ستاره":"☆ ستاره‌دار کردن";
+  $("star").classList.toggle("active",stars.has(w.id));
+  const opts=ans?ans.options:makeOptions(w);
+  const box=$("options");box.innerHTML="";
+  opts.forEach(o=>{
+    const b=document.createElement("button");b.className="opt";b.textContent=o;
+    if(ans){b.disabled=true;if(o===w.meaning)b.classList.add("correct");else if(o===ans.selected)b.classList.add("wrong")}
+    else b.onclick=()=>answer(w,o);
+    box.appendChild(b);
+  });
+  $("prev").disabled=idx===0;
+  $("next").disabled=!ans;
+}
+function answer(w,o){
+  if(answers[w.id])return;
+  const correct=o===w.meaning;
+  answers[w.id]={selected:o,correct,options:makeOptions(w)};
+  if(correct){score++;streak++}else{streak=0;wrongSet.add(w.id)}
+  save();render();
+}
+function finish(){
+  $("quiz").hidden=true;$("finish").hidden=false;
+  $("finalScore").textContent=`${score} پاسخ درست از ${deck.length} • ${Math.round(score/deck.length*100)}٪`;
+  const wrong=deck.filter(w=>wrongSet.has(w.id));
+  $("finalExtra").innerHTML=`<p>ستاره‌دار: ${stars.size} کلمه • برای مرور هوشمند، غلط‌ها را دوباره بزن.</p>`;
+  $("wrongList").innerHTML=wrong.length?wrong.map(w=>`<div class="reviewitem"><b>${w.word}</b> — ${w.meaning}</div>`).join(""):"🎯 این دور هیچ غلطی نداشتی!";
+}
+function start(newDeck,resetScore=false){
+  deck=newDeck.length?newDeck:words.slice();
+  idx=0;
+  if(resetScore){score=0;streak=0;answers={};wrongSet.clear()}
+  $("finish").hidden=true;$("quiz").hidden=false;render();save();
+}
+$("prev").onclick=()=>{idx--;render()};
+$("next").onclick=()=>{idx++;render()};
+$("speak").onclick=()=>{const u=new SpeechSynthesisUtterance($("word").textContent);u.lang="en-US";u.rate=.85;speechSynthesis.cancel();speechSynthesis.speak(u)};
+$("star").onclick=()=>{const w=deck[idx];stars.has(w.id)?stars.delete(w.id):stars.add(w.id);save();render()};
+$("reviewWrong").onclick=()=>{const d=words.filter(w=>wrongSet.has(w.id));if(d.length)start(d,false);else alert("هنوز کلمهٔ غلطی برای مرور نداری.")};
+$("restart").onclick=()=>start(words,true);
+$("restartWrong").onclick=()=>{const d=words.filter(w=>wrongSet.has(w.id));if(d.length)start(d,false);else alert("لیست غلط‌ها خالی است.")};
+$("starredOnly").onclick=()=>{const d=words.filter(w=>stars.has(w.id));if(d.length)start(d,false);else alert("هنوز کلمه‌ای را ستاره‌دار نکرده‌ای.")};
+
+async function boot(){
+  load();
+  try{
+    const r=await fetch(API,{cache:"no-store"});
+    if(!r.ok)throw new Error("API");
+    const raw=await r.json();
+    words=normalize(raw);
+    // Keep only single English lemmas, remove duplicates, and favor practical vocabulary.
+    const seen=new Set();
+    words=words.filter(w=>/^[A-Za-z][A-Za-z'-]*$/.test(w.word) && !seen.has(w.id) && seen.add(w.id));
+    if(words.length<1000)throw new Error("not-enough");
+    words=words.slice(0,1000);
+    localStorage.setItem("eng1000_words",JSON.stringify(words));
+    $("loading").hidden=true;
+    start(words,false);
+  }catch(e){
+    try{
+      const cached=JSON.parse(localStorage.getItem("eng1000_words")||"[]");
+      if(cached.length>=1000){words=cached; $("loading").hidden=true; start(words,false);return}
+    }catch(_){}
+    $("loading").innerHTML=`<div style="font-size:30px">⚠️</div><p>بارگذاری ۱۰۰۰ کلمه انجام نشد.</p><p class="note">این نسخه برای گرفتن مجموعهٔ ۱۰۰۰تایی به اینترنت نیاز دارد. اتصال اینترنت را روشن کن و فایل را دوباره باز کن.</p>`;
+  }
+}
+boot();
+</script>
+</body></html>
